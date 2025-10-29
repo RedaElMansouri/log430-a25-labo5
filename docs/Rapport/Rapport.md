@@ -16,7 +16,7 @@ J'ai envoyé la requête POST suivante au gateway :
  ```
   La réponse obtenue était un 500 Internal Server Error (voir capture/console jointe). Après inspection, le mapping de Krakend montre que l'endpoint est forwardé vers http://payments_api:5009/payments ; or, le service payments_api n'est pas présent dans le docker-compose.yml fourni, d'où l'échec.
 
-  ![screenshot_q1](../screnshot_q1.png)
+  ![screenshot_q1](assets/screnshot_q1.png)
 
 #### Question 2 : Quel type d'information envoyons-nous dans la requête à POST payments/process/:id ? Est-ce que ce serait le même format si on communiquait avec un service SOA, par exemple ? Illustrez votre réponse avec des exemples et captures d'écran/terminal.
 
