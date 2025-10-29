@@ -112,14 +112,36 @@ def request_payment_link(order_id, total_amount, user_id):
         "total_amount": total_amount
     }
 
-    # TODO: Requête à POST /payments
-    print("")
-    response_from_payment_service = {}
+    gateway_url = "http://api-gateway:8080/payments-api/payments"
+    try:
+        logger.debug(f"Requesting payment creation for order={order_id} amount={total_amount}")
+        response_from_payment_service = requests.post(
+            gateway_url,
+            json=payment_transaction,
+            headers={"Content-Type": "application/json"},
+            timeout=5
+        )
 
-    if True: # if response.ok
-        print(f"ID paiement: {payment_id}")
+        if response_from_payment_service.ok:
+            try:
+                data = response_from_payment_service.json()
+                payment_id = data.get("payment_id") or data.get("id") or data.get("paymentId") or 0
+            except ValueError:
+                text = response_from_payment_service.text.strip()
+                try:
+                    payment_id = int(text)
+                except Exception:
+                    payment_id = 0
 
-    return f"http://api-gateway:8080/payments-api/payments/process/{payment_id}" 
+            logger.debug(f"Received payment id: {payment_id}")
+        else:
+            logger.error(f"Payment service returned HTTP {response_from_payment_service.status_code}: {response_from_payment_service.text}")
+
+    except requests.RequestException as e:
+        logger.error(f"Error while requesting payment service: {e}")
+
+    
+    return f"http://api-gateway:8080/payments-api/payments/{payment_id}"
 
 def delete_order(order_id: int):
     """Delete order in MySQL, keep Redis in sync"""

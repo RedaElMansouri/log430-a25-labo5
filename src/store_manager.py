@@ -4,6 +4,7 @@ SPDX - License - Identifier: LGPL - 3.0 - or -later
 Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 """
 import threading
+import time
 from graphene import Schema
 from stocks.schemas.query import Query
 from flask import Flask, request, jsonify
@@ -12,7 +13,7 @@ from orders.controllers.user_controller import create_user, remove_user, get_use
 from stocks.controllers.product_controller import create_product, remove_product, get_product
 from stocks.controllers.stock_controller import get_stock, populate_redis_on_startup, set_stock, get_stock_overview
 from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
- 
+
 app = Flask(__name__)
 
 # Auto-populate Redis 5s after API startup (to give enough time for the DB to start up as well)
@@ -106,6 +107,13 @@ def get_stocks_overview():
     """Get stocks for all products"""
     rows = get_stock_overview()
     return jsonify(rows)
+
+# Timeout test endpoint
+@app.get('/test/slow/<int:delay_seconds>')
+def test_slow_endpoint(delay_seconds):
+    """Endpoint pour tester les timeouts"""
+    time.sleep(delay_seconds)
+    return {"message": f"Response after {delay_seconds} seconds"}, 200
 
 # Endpoint that allows suppliers to check stock
 @app.post('/stocks/graphql-query')
