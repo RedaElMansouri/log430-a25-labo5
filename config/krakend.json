@@ -35,12 +35,12 @@
       ]
     },
     {
-      "endpoint": "/store-manager-api/orders",
+      "endpoint": "/store-manager-api/orders/{order_id}",
       "method": "DELETE",
       "input_headers": ["*"],
       "backend": [
         {
-          "url_pattern": "/orders",
+          "url_pattern": "/orders/{order_id}",
           "host": ["http://store_manager:5000"],
           "timeout": "5s"
         }
