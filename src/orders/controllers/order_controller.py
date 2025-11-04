@@ -28,20 +28,22 @@ def update_order(request):
     payload = request.get_json() or {}
     order_id = payload.get('order_id')
     is_paid = payload.get('is_paid')
+    payment_id = payload.get('payment_id')
     logger.debug(f"Mettre à jour la commande {order_id}, status={is_paid}")
 
     try:
         # update MySQL
-        status = modify_order(order_id, is_paid=is_paid)
+        status = modify_order(order_id, is_paid=is_paid, payment_id=payment_id)
         
         # update Redis
         r = get_redis_conn()
         order = r.hgetall(f"order:{order_id}")
         order['is_paid'] = str(is_paid)
+        order['payment_link'] = f"http://api-gateway:8080/payments-api/payments/process/{payment_id}"
         r.hset(f"order:{order_id}", mapping=order)
 
         # response
-        logger.debug("Statut actuel", status)
+        logger.debug(f"Statut actuel : {status}")
         return jsonify({'updated': status}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
