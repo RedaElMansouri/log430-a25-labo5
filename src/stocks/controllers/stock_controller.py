@@ -27,9 +27,9 @@ def update_stock(request):
     operation = payload.get('operation')
     try:
         session = get_sqlalchemy_session()
-        result = update_stock_mysql(session, items, operation)
-        return jsonify({'result': result}), 201
-    except Exception as e:
+        update_stock_mysql(session, items, operation)
+        return jsonify({'result': 'OK'}), 201
+    except Exception as e:  
         return jsonify({'error': str(e)}), 500
 
 def get_stock(product_id):
