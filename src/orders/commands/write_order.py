@@ -52,7 +52,8 @@ def add_order(user_id: int, items: list):
 
         order_id = new_order.id
 
-        new_order.payment_link = request_payment_link(new_order.id, total_amount, user_id)
+        # TODO: il faut mettre à jour le lien de paiement si la création du paiement (CREATING_PAYMENT) a réussi
+        new_order.payment_link = ""
         session.flush()  
         
         for item in order_items:
@@ -72,9 +73,8 @@ def add_order(user_id: int, items: list):
         session.commit()
         logger.debug("Une commande a été ajouté")
 
-        # NOTE: il faut mettre à jour le lien de paiement si la création du paiement (CREATING_PAYMENT) a réussi
-        payment_link = ""
-        add_order_to_redis(order_id, user_id, total_amount, items, payment_link)
+        # TODO: il faut mettre à jour le lien de paiement si la création du paiement (CREATING_PAYMENT) a réussi
+        add_order_to_redis(order_id, user_id, total_amount, items, new_order.payment_link)
         return order_id
 
     except Exception as e:
@@ -83,13 +83,16 @@ def add_order(user_id: int, items: list):
     finally:
         session.close()
 
-def modify_order(order_id: int, is_paid: bool):
+def modify_order(order_id: int, is_paid: bool, payment_id: int):
     session = get_sqlalchemy_session()
     try:
         order = session.query(Order).filter(Order.id == order_id).first()
 
         if order is not None and is_paid is not None:
             order.is_paid = is_paid
+
+        if order is not None and is_paid is not None:
+            order.payment_link = f"http://api-gateway:8080/payments-api/payments/process/{payment_id}"
 
         session.commit()
         session.refresh(order)
@@ -106,27 +109,8 @@ def modify_order(order_id: int, is_paid: bool):
         session.close()
 
 def request_payment_link(order_id, total_amount, user_id):
-    payment_id = 0
-    payment_transaction = {
-        "user_id": user_id,
-        "order_id": order_id,
-        "total_amount": total_amount
-    }
-
-    logger.debug("Requête à POST /payments")
-    response_from_payment_service = requests.post(
-        'http://api-gateway:8080/payments-api/payments',
-        json=payment_transaction,
-        headers={'Content-Type': 'application/json'}
-    )
-    if response_from_payment_service.ok:
-        data = response_from_payment_service.json() 
-        payment_id = data['payment_id']
-        logger.debug(f"ID paiement: {payment_id}")
-    else:
-        logger.error("Erreur:", response_from_payment_service.status_code, response_from_payment_service.text)
-
-    return f"http://api-gateway:8080/payments-api/payments/process/{payment_id}" 
+    # NOTE: Cette méthode ne sera pas utilisé pendant ce labo
+    return "" 
 
 def delete_order(order_id: int):
     """Delete order in MySQL, keep Redis in sync"""
